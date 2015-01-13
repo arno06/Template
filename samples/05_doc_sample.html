@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Template.js - Sample</title>
+		<script src="../../Dependencies/src/?need=Template"></script>
+		<script>
+		function init()
+		{
+			var table = ["This", "must", "work"];
+			var me = {"name":"Template.js", "mood":"pretty good"};
+			var tpl = new Template("firstTemplate");
+			tpl.assign("var1", "world");
+			tpl.assign("me", me);
+			tpl.assign("myTable", table);
+			tpl.addEventListener(TemplateEvent.RENDER_INIT, tplRenderInitHandler, false);
+			tpl.addEventListener(TemplateEvent.RENDER_COMPLETE, tplRenderCompleteHandler, false);
+			tpl.addEventListener(TemplateEvent.RENDER_COMPLETE_LOADED, tplRenderCompleteLoadedHandler, false);
+			tpl.render("#holder");
+		}
+		window.addEventListener("load", init, false);
+
+		function tplRenderInitHandler(e)
+		{
+			console.log("Sample.js : init");
+		}
+
+		function tplRenderCompleteHandler(e)
+		{
+			//Ready to display result
+			console.log("Sample.js : complete");
+		}
+
+		function tplRenderCompleteLoadedHandler(e)
+		{
+			//Ready to display & everything is loaded (images)
+			console.log("Sample.js : complete & loaded");
+		}
+		</script>
+	</head>
+	<body>
+		<h1>Template.js - Sample</h1>
+		<div id="holder"></div>
+		<script type="html/template" id="firstTemplate">
+			<h2>Hello {$var1}</h2>
+			<ul>
+			{foreach $myTable $item $key}
+				<li>{$item} : {if $key%2==0} even {else} odd {/if}</li>
+			{else}
+			<li>Empty Table</li>
+			{/foreach}
+			</ul>
+			<p>Hi, I am {$me.name} and I am in a {$me.mood} mood.</p>
+		</script>
+	</body>
+</html>

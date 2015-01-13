@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>JS Templating</title>
+		<link href="../../common/docs/docs.css" rel="stylesheet" type="text/css">
+		<script src="../../Dependencies/src/?need=Request,Template,M4Tween"></script>
+		<script>
+			function init()
+			{
+				document.querySelector("#bt_load").addEventListener("click", loadHandler);
+			}
+
+			function loadHandler()
+			{
+				var loader = document.querySelector("#loader");
+				loader.style.display = "block";
+				document.querySelector("#placeholder").innerHTML = "";
+				Request.load("php/eurosport_rss.php")
+						.onComplete(function(pResponse)
+				{
+					var data = pResponse.responseJSON;
+
+					var items = data.channel.item;
+					var item, cats;
+					for(var i = 0, max = items.length;i<max;i++)
+					{
+						item = items[i];
+						if(typeof item.category != "string")
+							cats = item.category.join(" - ");
+						else
+							cats = item.category;
+						cats += " - ";
+						item.title = item.title.substr(cats.length, item.title.length - cats.length);
+					}
+
+					var tpl = new Template("tpl_1");
+					tpl.assign("items", data.channel.item);
+					tpl.addEventListener(TemplateEvent.RENDER_COMPLETE_LOADED, function(e)
+					{
+						loader.style.display = "none";
+					});
+					tpl.render("#placeholder");
+				});
+			}
+		</script>
+		<style type="text/css">
+			#placeholder, #loader{width:480px;height:864px;position:absolute;}
+			#placeholder{background: #e6e6e6;overflow: auto;}
+			#loader{background:#000000 url(loader.gif) no-repeat center center;overflow:hidden;}
+			#placeholder .item{width:90%;height:190px;  overflow: hidden;border:5px solid #ffffff;margin:5px auto;}
+			#placeholder .item h1{color:#ffffff;font-size:16px;}
+			.content{height:900px;}
+		</style>
+	</head>
+	<body onload="init()">
+		<header>
+			<h1>Template.js - event - (ctrl + u)</h1>
+		</header>
+		<div class="content">
+			<button id="bt_load">Load</button>
+			<div id="placeholder">
+
+			</div>
+			<div id="loader" style="display:none;"></div>
+			<script type="html/template" id="tpl_1">
+				{foreach $items $item $key}
+					<div class="item">
+						<img src="{$item.image.url}" alt="{$item.title}">
+						<h1>{$item.title}</h1>
+						{foreach $item.category $cat}
+							<span>{$cat}</span>
+						{/foreach}
+					</div>
+				{/foreach}
+			</script>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>JS Templating</title>
+		<link href="../../common/docs/docs.css" rel="stylesheet" type="text/css">
+		<script src="../../Dependencies/src/?need=Template"></script>
+		<script>
+			function init()
+			{
+				var d = new Date();
+				var t = new Template("tpl_1");
+				t.assign("bool", true);
+				t.assign("name", "stranger");
+				t.assign("table1", ["foo", "bar"]);
+				t.assign("table2", ["one", "two", "three"]);
+				t.assign("names", [{t:"w00t", "test":"bouboup", toto:["oui", "non", "peut etre"]},{t:"Audrey", toto:[]},{t:"Virginie", toto:["oui", "bouboup", "non"]},{t:"Adrien", toto:["oui", "non"]}]);
+				t.assign("emptyTable", []);
+				t.assign("date", {heures:d.getHours(), minutes:d.getMinutes()});
+				t.render("#placeholder");
+			}
+		</script>
+	</head>
+	<body onload="init()">
+		<header>
+			<h1>Template.js - basics - (ctrl + u)</h1>
+		</header>
+		<div id="placeholder" class="content">
+
+		</div>
+		<script type="html/template" id="tpl_1">
+			<h1>Hello {$name}</h1>
+			<h3>Tableau sans boucle</h3>
+			<ul>
+				<li>{$table2.0}</li>
+				<li>{$table2.1}</li>
+				<li>{$table2.2}</li>
+			</ul>
+			<h3>Tableau foreach</h3>
+			<ul>
+				{foreach $table1 $item $key}
+				<li>{$key} {$item}
+					{if $key%2!=0}
+						odd
+					{else}
+						even
+					{/if}
+				</li>
+				{/foreach}
+			</ul>
+			<h3>Tableau foreach else</h3>
+			<ul>
+				{foreach $tableEmpty $item $key}
+				<li>{$key} {$item}</li>
+				{else}
+				<li>Vide</li>
+				{/foreach}
+			</ul>
+			<h3>Tableau foreach objet</h3>
+			<ul>
+				{foreach $names $item $key}
+				<li>{$item.t} {$item.test}
+					{foreach $item.toto $n}
+						{$n},
+					{else}
+						Nothing to see here
+					{/foreach}
+				</li>
+				{/foreach}
+			</ul>
+			{if $bool}
+				<h1>Oh la condition est remplie</h1>
+			{/if}
+			<span>Il est {$date.heures}h {$date.minutes}min</span>
+		</script>
+	</body>
+</html>

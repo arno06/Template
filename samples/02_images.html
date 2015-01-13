@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>JS Templating</title>
+		<link href="../../common/docs/docs.css" rel="stylesheet" type="text/css">
+		<script src="../../Dependencies/src/?need=Template"></script>
+		<script>
+			function init()
+			{
+				var d = new Date();
+				var t = new Template("tpl_1");
+				t.assign("image", "http://images4.fanpop.com/image/photos/19900000/Cereal-Guy-GIF-cereal-guy-19964959-500-451.gif?"+Math.round(Math.random()*1000));
+				t.render("#placeholder");
+			}
+		</script>
+	</head>
+	<body onload="init()">
+		<header>
+			<h1>Template.js - images - (ctrl + u)</h1>
+		</header>
+		<div id="placeholder" class="content">
+
+		</div>
+		<script type="html/template" id="tpl_1">
+			<h1>Test avec une image</h1>
+			<img src="{$image}" alt="">
+		</script>
+	</body>
+</html>
