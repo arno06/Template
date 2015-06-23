@@ -1,20 +1,26 @@
-M4Tween
+Template
 ===========
 
 Features
 ------------
-* Any kinds of variables (String, Number, Array, Object)
+* Variables (String, Number, Array, Object)
 * Loops (for Array only)
 * Conditions
 * Functions (in progress)
 * Event based
 * Smarty'ish syntax
 
+Todo
+------------
+* [x] Includes
+* [ ] Comments
+
 Dependencies
 ------------
-* Class
-* Event
-* Request
+* [Class] (https://github.com/arno06/M4/blob/master/src/Class.js)
+* [Event] (https://github.com/arno06/M4/blob/master/src/Event.js)
+* [EventDispatcher] (https://github.com/arno06/M4/blob/master/src/EventDispatcher.js)
+* [Template](http://github.com/arno06/Request)
 
 Example
 ------------
