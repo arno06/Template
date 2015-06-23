@@ -112,7 +112,7 @@ Class.define(Template, [EventDispatcher],
 		var opener = new RegExp('\\'+t_0+'([a-z]+)(_[0-9]+)([^\}]*)\\'+t_1, 'i');
 
 		//$path.to.var
-		var rea = /\$([a-z0-9\.\_\-]+)*/i;
+		var rea = /\$([a-z0-9\._\-]+)*/i;
 
 		var o, start, neutral, n, closer, c, length, totalBlock, blc, alt, params;
 
@@ -321,10 +321,10 @@ Template.FUNCTIONS =
 	},
     include:function(pId)
     {
-        var data = arguments[arguments.length-1];
-        var vars = arguments[arguments.length-1];
+        var last = arguments.length-1;
+        var vars = arguments[last];
         var v;
-        for(var i = 1, max = arguments.length-1;i<max;i++)
+        for(var i = 1;i<last;i++)
         {
             v = arguments[i].split('=');
             if(v.length!=2)

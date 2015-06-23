@@ -14,6 +14,7 @@ Dependencies
 ------------
 * Class
 * Event
+* Request
 
 Example
 ------------
@@ -30,6 +31,11 @@ Html template definition :
 	<body>
 		<h1>Template.js - Sample</h1>
 		<div id="holder"></div>
+		<script type="text/template" id="includeTpl">
+		<div>This is an include</div>
+		<div>{$some_custom_var}</div>
+		<div>{$var1}</div>
+		</script>
 		<script type="text/template" id="firstTemplate">
 			<h2>Hello {$var1}</h2>
 			<ul>
@@ -41,6 +47,7 @@ Html template definition :
 			</ul>
 			<p>Hi, I am {$me.name} and I am in a {$me.mood} mood.</p>
 			<p>fooFunc : {=fooFunc()}</p>
+			{=include("includeTpl", some_custom_var="hell yeah")}
 		</script>
 	</body>
 </html>
@@ -57,7 +64,7 @@ function init()
 	tpl.assign("var1", "world");
 	tpl.assign("me", me);
 	tpl.assign("myTable", table);
-	tpl.setFunction("foo", fooFunc);
+	tpl.setFunction("fooFunc", fooFunc);
 	tpl.addEventListener(TemplateEvent.RENDER_INIT, tplRenderInitHandler, false);
 	tpl.addEventListener(TemplateEvent.RENDER_COMPLETE, tplRenderCompleteHandler, false);
 	tpl.addEventListener(TemplateEvent.RENDER_COMPLETE_LOADED, tplRenderCompleteLoadedHandler, false);
