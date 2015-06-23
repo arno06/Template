@@ -39,8 +39,13 @@
 	<body>
 		<h1>Template.js - Sample</h1>
 		<div id="holder"></div>
-		<script type="html/template" id="id_tpl">
-			<h2>Hello {$var1}</h2>
+<script type="text/template" id="test_tpl">
+        <h3>This is an include {$custom_var}</h3>
+        <h4>{$named_var}</h4>
+    <h5>{$test1}</h5>
+</script>
+		<script type="text/template" id="id_tpl">
+			<h2>Hello {$test1}</h2>
 			<ul>
 			{foreach $myTable $item $key}
 				<li>{$item} : {if $key%2==0} even {else} odd {/if}
@@ -54,6 +59,7 @@
 				<li>$test2>=0 {if $test2>=0}ok{else}ko{/if}</li>
 				<li>$test1>=0&&$test2>=0 {if $test1>=0&&$test2>=0}ok{else}ko{/if}</li>
 			</ul>
+            {=include("test_tpl", custom_var="test", named_var="foo")}
 		</script>
 	</body>
 </html>

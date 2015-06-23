@@ -30,7 +30,7 @@ Html template definition :
 	<body>
 		<h1>Template.js - Sample</h1>
 		<div id="holder"></div>
-		<script type="html/template" id="firstTemplate">
+		<script type="text/template" id="firstTemplate">
 			<h2>Hello {$var1}</h2>
 			<ul>
 			{foreach $myTable $item $key}

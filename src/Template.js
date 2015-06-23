@@ -1,7 +1,7 @@
-function Template(pIdTemplate)
+function Template(pIdTemplate, pContent)
 {
 	this.removeAllEventListener();
-	this._content = {};
+	this._content = pContent||{};
 	this._functions = Template.FUNCTIONS||{};
 	this.time = null;
 	this._id = pIdTemplate;
@@ -210,9 +210,7 @@ Class.define(Template, [EventDispatcher],
 
 		pString = this._parseVariables(pString, pData, Template.REGXP_VAR);
 
-		var func;
-		var a;
-		var p;
+		var func, a, p;
 		while(func = Template.REGXP_FUNC.exec(pString))
 		{
 			var funcName = func[1];
@@ -237,6 +235,7 @@ Class.define(Template, [EventDispatcher],
 					p.push(params[i]);
 				}
 			}
+            p.push(pData);
 			pString = pString.replace(func[0], this._functions[funcName].apply(null, p));
 		}
 
@@ -284,6 +283,7 @@ Template.TAG = ["{", "}"];
 Template.REGXP_FUNC = new RegExp("\\"+Template.TAG[0]+"\\=([^(]+)\\(([^"+Template.TAG[1]+"]+)\\)\\"+Template.TAG[1], "i");
 Template.REGXP_VAR = new RegExp("\\"+Template.TAG[0]+"\\$([a-z0-9\.\_\-]+)*\\"+Template.TAG[1], "i");
 Template.REGXP_ID = new RegExp("([a-z0-9\.\_\-]+)", "i");
+Template.SCRIPT_TYPE = 'text/template';
 
 Template.FUNCTIONS =
 {
@@ -313,19 +313,34 @@ Template.FUNCTIONS =
 	add:function()
 	{
 		var result = 0;
-		for(var i = 0, max = arguments.length;i<max;i++)
+		for(var i = 0, max = arguments.length-1;i<max;i++)
 		{
 			result+=Number(arguments[i]);
 		}
 		return result;
-	}
+	},
+    include:function(pId)
+    {
+        var data = arguments[arguments.length-1];
+        var vars = arguments[arguments.length-1];
+        var v;
+        for(var i = 1, max = arguments.length-1;i<max;i++)
+        {
+            v = arguments[i].split('=');
+            if(v.length!=2)
+                continue;
+            vars[v[0]] = v[1].replace(/"/g, '').replace(/'/g, '');
+        }
+        var t = new Template(pId, vars);
+        return t.evaluate();
+    }
 };
 
 Template.$ = {};
 
 Template.setup=function()
 {
-	var templates = document.querySelectorAll('script[type="html/template"]');
+	var templates = document.querySelectorAll('script[type="'+Template.SCRIPT_TYPE+'"]');
 	templates.forEach(function(pEl)
 	{
 		Template.$[pEl.getAttribute("id")] = pEl.text;
