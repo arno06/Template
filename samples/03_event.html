@@ -37,6 +37,7 @@
 					tpl.assign("items", data.channel.item);
 					tpl.addEventListener(TemplateEvent.RENDER_COMPLETE_LOADED, function(e)
 					{
+                        console.log("completed");
 						loader.style.display = "none";
 					});
 					tpl.render("#placeholder");

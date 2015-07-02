@@ -2,6 +2,7 @@ function Template(pIdTemplate, pContent)
 {
 	this.removeAllEventListener();
 	this._content = pContent||{};
+    this._c = {};
 	this._functions = Template.FUNCTIONS||{};
 	this.time = null;
 	this._id = pIdTemplate;
@@ -45,18 +46,26 @@ Class.define(Template, [EventDispatcher],
 
 		var i = 0;
 
+        function tick()
+        {
+            if(++i==max)
+                self.dispatchEvent(new TemplateEvent(TemplateEvent.RENDER_COMPLETE_LOADED, self.time, false));
+        }
+
 		imgs.forEach(function(img)
 		{
-			img.addEventListener("load", function()
-			{
-				if(++i==max)
-					self.dispatchEvent(new TemplateEvent(TemplateEvent.RENDER_COMPLETE_LOADED, self.time, false));
-			});
+            if(img.complete && (++i==max))
+            {
+                self.dispatchEvent(new TemplateEvent(TemplateEvent.RENDER_COMPLETE_LOADED, self.time, false));
+            }
+			img.onload = tick;
+            img.onerror = tick;
 		});
 
 	},
 	evaluate:function()
 	{
+        this._c = JSON.parse(JSON.stringify(this._content));
 		var start = new Date().getTime();
 		var t = Template.$[this._id];
 		if(!t)
@@ -98,7 +107,7 @@ Class.define(Template, [EventDispatcher],
 
 			t = t.replace(result[0], tag+"_"+currentId+result[2]);
 		}
-		var eval = this._parseBlock(t, this._content);
+		var eval = this._parseBlock(t, this._c);
 		var end = new Date().getTime();
 		this.time = end - start;
 		return eval;
@@ -258,7 +267,7 @@ Class.define(Template, [EventDispatcher],
 	_getVariable:function(pName, pContext)
 	{
 		var default_value = "";
-		var data = pContext||this._content;
+		var data = pContext||this._c;
 		var result = Template.REGXP_ID.exec(pName);
 
 		if(!result)
@@ -391,7 +400,7 @@ Template.load = function(pDataList)
 	};
 };
 
-window.addEventListener("load", Template.setup, false);
+window.addEventListener("DOMContentLoaded", Template.setup, false);
 
 function TemplateEvent(pType, pTime, pBubbles)
 {
