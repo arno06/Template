@@ -13,14 +13,13 @@ Features
 Todo
 ------------
 * [x] Includes
-* [ ] Comments
 
 Dependencies
 ------------
 * [Class] (https://github.com/arno06/M4/blob/master/src/Class.js)
 * [Event] (https://github.com/arno06/M4/blob/master/src/Event.js)
 * [EventDispatcher] (https://github.com/arno06/M4/blob/master/src/EventDispatcher.js)
-* [Template](http://github.com/arno06/Request)
+* [Request](http://github.com/arno06/Request)
 
 Example
 ------------
