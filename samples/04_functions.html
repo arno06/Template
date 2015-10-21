@@ -45,7 +45,7 @@
 				</tr>
 				<tr>
 					<td>Truncate :</td>
-					<td>{=truncate($lorem, 25)}</td>
+					<td>{=truncate($lorem, 25, '...')}</td>
 				</tr>
 				<tr>
 					<td>Uppercase :</td>
@@ -57,7 +57,7 @@
 				</tr>
 				<tr>
 					<td>Replace :</td>
-					<td>{=replace($lorem, 'i', '!')}</td>
+					<td>{=replace($lorem, 'i', '!', 'gi')}</td>
 				</tr>
 			</table>
 			<h3>Custom : addition</h3>
