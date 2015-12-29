@@ -6,11 +6,19 @@
 		<script>
 		function init()
 		{
+            var obj = {
+                "label":"value",
+                "foo":"bar",
+                "mmh":"working?"
+            };
+            var emptyArray = [];
 			var table = ["This", "is", "spartaaa", "...", "foo", "bar"];
 			var tpl = new Template("id_tpl");
 			tpl.assign("myTable", table);
 			tpl.assign("test1", 42);
 			tpl.assign("test2", 6);
+            tpl.assign("obj", obj);
+            tpl.assign("emptyArray", emptyArray);
 			tpl.addEventListener(TemplateEvent.RENDER_INIT, tplRenderInitHandler, false);
 			tpl.addEventListener(TemplateEvent.RENDER_COMPLETE, tplRenderCompleteHandler, false);
 			tpl.addEventListener(TemplateEvent.RENDER_COMPLETE_LOADED, tplRenderCompleteLoadedHandler, false);
@@ -46,6 +54,7 @@
 </script>
 		<script type="text/template" id="id_tpl">
 			<h2>Hello {$test1}</h2>
+            <h3>Iterate on Array</h3>
 			<ul>
 			{foreach $myTable $item $key}
 				<li>{$item} : {if $key%2==0} even {else} odd {/if}
@@ -53,13 +62,28 @@
 				</li>
 			{/foreach}
 			</ul>
-			<h1>Condition test</h1>
+			<h3>Condition test</h3>
 			<ul>
 				<li>$test1>=0 {if $test1>=0}ok{else}ko{/if}</li>
 				<li>$test2>=0 {if $test2>=0}ok{else}ko{/if}</li>
 				<li>$test1>=0&&$test2>=0 {if $test1>=0&&$test2>=0}ok{else}ko{/if}</li>
 			</ul>
+            <h3>Include function</h3>
             {=include("test_tpl", custom_var="test", named_var="foo")}
+            <h3>Iterate on Object</h3>
+            <ul>
+            {foreach $obj $value $key}
+                <li>{$key} : {$value}</li>
+            {/foreach}
+            </ul>
+            <h3>Empty Array</h3>
+            <ul>
+                {foreach $emptyArray $value $key}
+                <li>{$key} : {$value}</li>
+                {else}
+                <li>Yes, empty array.</li>
+                {/foreach}
+            </ul>
 		</script>
 	</body>
 </html>

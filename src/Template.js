@@ -161,17 +161,21 @@ Class.define(Template, [EventDispatcher],
 					params = o[3].split(" ");//Setup [*, tablename, itemname, keyname]
 					params[1] = params[1].replace("$","");
 					var d = this._getVariable(params[1], pData);
-					if(d && d.length)
+					if(d)
 					{
 						var val = t_0+(params[2]||"$v")+t_1;
 						var key = t_0+(params[3]||"$k")+t_1;
 						var c_key = (params[3]||"$k").replace("$", "");
 						var re = new RegExp("\\"+t_0+"\\"+(params[2]||"$v")+"([a-z0-9\.\_\-]+)*\\"+t_1, "gi");
+                        var empty = true;
 						var v = "";
 						var tmp = "";
 						var vr;
-						for(var j = 0, maxj = d.length;j<maxj;j++)
+						for(var j in d)
 						{
+                            if(!d.hasOwnProperty(j))
+                                continue;
+                            empty = false;
 							v = blc.replace(val, d[j]);
 							tmp = v;
 							while(vr = re.exec(v))//Keep exec on "v" and replacing on "tmp" (loosing string index)
@@ -195,6 +199,10 @@ Class.define(Template, [EventDispatcher],
 							v = this._parseBlock(v, dataCloned);
 							r += v;
 						}
+                        if(empty === true)
+                        {
+                            r = this._parseBlock(alt, pData);
+                        }
 					}
 					else
 						r = this._parseBlock(alt, pData);
