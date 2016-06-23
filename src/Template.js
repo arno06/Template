@@ -185,7 +185,7 @@ Class.define(Template, [EventDispatcher],
 							}
 							v = tmp.replace(key, t_0+(params[2]||"$v")+"."+c_key+t_1);
 							v = v.replace("$"+c_key, (params[2]||"$v")+"."+c_key);
-							if(typeof d[j] == "string" || typeof d[j] == "number")
+							if(typeof d[j] == "string" || typeof d[j] == "number" || typeof d[j] == "boolean" || d[j] === null)
 							{
 								tmp = d[j];
 								d[j] = {};
