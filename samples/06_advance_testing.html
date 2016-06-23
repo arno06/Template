@@ -9,7 +9,9 @@
             var obj = {
                 "label":"value",
                 "foo":"bar",
-                "mmh":"working?"
+                "mmh":"working?",
+                "number_entry":12,
+                "string_number_entry":"123"
             };
             var emptyArray = [];
 			var table = ["This", "is", "spartaaa", "...", "foo", "bar"];
@@ -18,6 +20,7 @@
 			tpl.assign("test1", 42);
 			tpl.assign("test2", 6);
             tpl.assign("obj", obj);
+            tpl.assign("arrayObj", [obj, obj, obj, obj, obj]);
             tpl.assign("emptyArray", emptyArray);
 			tpl.addEventListener(TemplateEvent.RENDER_INIT, tplRenderInitHandler, false);
 			tpl.addEventListener(TemplateEvent.RENDER_COMPLETE, tplRenderCompleteHandler, false);
@@ -84,6 +87,14 @@
                 <li>Yes, empty array.</li>
                 {/foreach}
             </ul>
+            <h3>Object[]</h3>
+            {foreach $arrayObj $value $key}
+                <ul>
+                    {foreach $value $item $n}
+                        <li>{$n} : {$item}</li>
+                    {/foreach}
+                </ul>
+            {/foreach}
 		</script>
 	</body>
 </html>
