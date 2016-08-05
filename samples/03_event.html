@@ -3,7 +3,7 @@
 	<head>
 		<title>JS Templating</title>
 		<link href="../../common/docs/docs.css" rel="stylesheet" type="text/css">
-		<script src="../../Dependencies/src/?need=Request,Template,M4Tween"></script>
+		<script src="../../Dependencies/src/?need=Request.es6,Template,M4Tween"></script>
 		<script>
 			function init()
 			{
@@ -16,9 +16,9 @@
 				loader.style.display = "block";
 				document.querySelector("#placeholder").innerHTML = "";
 				Request.load("php/eurosport_rss.php")
-						.onComplete(function(pResponse)
+						.onComplete(function(e)
 				{
-					var data = pResponse.responseJSON;
+					var data = e.currentTarget.responseJSON;
 
 					var items = data.channel.item;
 					var item, cats;
