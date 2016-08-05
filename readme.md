@@ -9,6 +9,7 @@ Features
 * Functions (in progress)
 * Event based
 * Smarty'ish syntax
+* ES6 Compliant
 
 Todo
 ------------
@@ -16,10 +17,7 @@ Todo
 
 Dependencies
 ------------
-* [Class] (https://github.com/arno06/M4/blob/master/src/Class.js)
-* [Event] (https://github.com/arno06/M4/blob/master/src/Event.js)
-* [EventDispatcher] (https://github.com/arno06/M4/blob/master/src/EventDispatcher.js)
-* [Request](http://github.com/arno06/Request)
+* [Request](http://github.com/arno06/Request) : Async template loading
 
 Example
 ------------
