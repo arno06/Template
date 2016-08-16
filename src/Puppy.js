@@ -1,51 +1,56 @@
+"use strict";
+
 var Puppy = (function(){
     var sources = {};
     var events = {
         UPDATED_DATA: 'evt_updated_data'
     };
 
-    function Container(pElement, pDataSource, pTemplate)
+    class Container extends EventEmitter
     {
-        this.element = pElement;
-        this.source = pDataSource;
-        this.template = pTemplate;
-        this.template.addEventListener(TemplateEvent.RENDER_COMPLETE, this.dispatchEvent.proxy(this));
-        this.source.addEventListener(events.UPDATED_DATA, this._dataUpdated.proxy(this), false);
-        this._dataUpdated();
-    }
+        constructor(pElement, pDataSource, pTemplate)
+        {
+            this.element = pElement;
+            this.source = pDataSource;
+            this.template = pTemplate;
+            this.template.addEventListener(TemplateEvent.RENDER_COMPLETE, this.dispatchEvent.bind(this));
+            this.source.addEventListener(events.UPDATED_DATA, this._dataUpdated.bind(this), false);
+            this._dataUpdated();
+        }
 
-    Class.define(Container, [EventDispatcher], {
-        _dataUpdated:function()
+        _dataUpdated()
         {
             this.template._content = this.source.getData();
             this.element.innerHTML = '';
             this.template.render(this.element);
         }
-    });
-
-
-    function DataSource(pData)
-    {
-        this._data = pData;
-        this.dispatchEvent(new Event(events.UPDATED_DATA));
     }
 
-    Class.define(DataSource, [EventDispatcher], {
-        setData:function(pData)
+    class DataSource extends EventEmitter
+    {
+        constructor(pData = null)
         {
-            this._data = pData;
-            this.dispatchEvent(new Event(events.UPDATED_DATA));
-        },
-        setValue:function(pName, pData)
+            if(pData !== null)
+                this.data = pData;
+        }
+
+        setValue(pName, pData)
         {
             this._data[pName] = pData;
             this.dispatchEvent(new Event(events.UPDATED_DATA));
-        },
-        getData:function()
+        }
+
+        set data(pValue)
+        {
+            this._data = pValue;
+            this.dispatchEvent(new Event(events.UPDATED_DATA));
+        }
+
+        get data()
         {
             return this._data;
         }
-    });
+    }
 
     if(!NodeList.prototype.forEach)
         NodeList.prototype.forEach = Array.prototype.forEach;
@@ -55,8 +60,8 @@ var Puppy = (function(){
     {
         if(!pElement.getAttribute('data-source') || !pElement.getAttribute('data-template'))
             return false;
-        var src = pElement.getAttribute('data-source');
-        var tpl = pElement.getAttribute('data-template');
+        let src = pElement.getAttribute('data-source');
+        let tpl = pElement.getAttribute('data-template');
         if(!sources[src])
             return false;
         return new Container(pElement, sources[src], new Template(tpl));
