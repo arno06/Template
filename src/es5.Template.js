@@ -177,24 +177,6 @@ Class.define(Template, [EventDispatcher],
                                 continue;
                             empty = false;
                             v = blc;
-                            while(v.indexOf(val)>-1)
-							    v = v.replace(val, d[j]);
-							tmp = v;
-                            while(vr = re.exec(v))//Keep exec on "v" and replacing on "tmp" (loosing string index)
-							{
-								vr[1] = vr[1].substr(1, vr[1].length-1);
-								tmp = tmp.replace(vr[0], this._getVariable(vr[1], d[j]));
-							}
-							v = tmp.replace(key, t_0+(params[2]||"$v")+"."+c_key+t_1);
-							v = v.replace("$"+c_key, (params[2]||"$v")+"."+c_key);
-							if(typeof d[j] == "string" || typeof d[j] == "number" || typeof d[j] == "boolean" || d[j] === null)
-							{
-								tmp = d[j];
-								d[j] = {};
-								d[j][(params[2]||"$v")] = tmp;
-							}
-							d[j][c_key] = j;
-
 							var dataCloned = Object.clone(pData);
 							dataCloned[(params[2]||"$v").replace("$", "")] = d[j];
 							dataCloned[c_key] = j;
