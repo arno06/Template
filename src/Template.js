@@ -194,7 +194,9 @@ class Template extends EventEmitter
                             if(!d.hasOwnProperty(j))
                                 continue;
                             empty = false;
-                            let v = blc.replace(val, d[j]);
+                            let v = blc;
+                            while(v.indexOf(val)>-1)
+                                v = v.replace(val, d[j]);
                             let tmp = v;
                             while(vr = re.exec(v))//Keep exec on "v" and replacing on "tmp" (loosing string index)
                             {

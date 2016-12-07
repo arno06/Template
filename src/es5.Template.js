@@ -176,9 +176,11 @@ Class.define(Template, [EventDispatcher],
                             if(!d.hasOwnProperty(j))
                                 continue;
                             empty = false;
-							v = blc.replace(val, d[j]);
+                            v = blc;
+                            while(v.indexOf(val)>-1)
+							    v = v.replace(val, d[j]);
 							tmp = v;
-							while(vr = re.exec(v))//Keep exec on "v" and replacing on "tmp" (loosing string index)
+                            while(vr = re.exec(v))//Keep exec on "v" and replacing on "tmp" (loosing string index)
 							{
 								vr[1] = vr[1].substr(1, vr[1].length-1);
 								tmp = tmp.replace(vr[0], this._getVariable(vr[1], d[j]));
