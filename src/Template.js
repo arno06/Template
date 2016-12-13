@@ -270,7 +270,7 @@ class Template extends EventEmitter
         {
             let value = this._getVariable(res[1], pData);
             if(pEscapeString&& (typeof value )== "string")
-                value = "'"+value+"'";
+                value = "'"+value.replace(/\'/g, "\\'")+"'";
             pString = pString.replace(res[0], value);
         }
         return pString;
