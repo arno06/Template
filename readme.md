@@ -16,9 +16,9 @@ Todo
 
 Dependencies
 ------------
-* [Class] (https://github.com/arno06/M4/blob/master/src/Class.js)
-* [Event] (https://github.com/arno06/M4/blob/master/src/Event.js)
-* [EventDispatcher] (https://github.com/arno06/M4/blob/master/src/EventDispatcher.js)
+* [Class](https://github.com/arno06/M4/blob/master/src/Class.js)
+* [Event](https://github.com/arno06/M4/blob/master/src/Event.js)
+* [EventDispatcher](https://github.com/arno06/M4/blob/master/src/EventDispatcher.js)
 * [Request](http://github.com/arno06/Request)
 
 Example
