@@ -1,8 +1,10 @@
 "use strict";
 
-var Puppy = (function(){
-    var sources = {};
-    var events = {
+Template = Template||{};
+
+Template.DataBinding = (function(){
+    let sources = {};
+    let events = {
         UPDATED_DATA: 'evt_updated_data'
     };
 
@@ -10,17 +12,20 @@ var Puppy = (function(){
     {
         constructor(pElement, pDataSource, pTemplate)
         {
+            super();
             this.element = pElement;
             this.source = pDataSource;
             this.template = pTemplate;
-            this.template.addEventListener(TemplateEvent.RENDER_COMPLETE, this.dispatchEvent.bind(this));
+            this.template.addEventListener(TemplateEvent.RENDER_COMPLETE, (e)=>{
+                this.dispatchEvent(new e.constructor(e.type, e));
+            });
             this.source.addEventListener(events.UPDATED_DATA, this._dataUpdated.bind(this), false);
             this._dataUpdated();
         }
 
         _dataUpdated()
         {
-            this.template._content = this.source.getData();
+            this.template._content = this.source.data;
             this.element.innerHTML = '';
             this.template.render(this.element);
         }
@@ -30,6 +35,7 @@ var Puppy = (function(){
     {
         constructor(pData = null)
         {
+            super();
             if(pData !== null)
                 this.data = pData;
         }
@@ -69,15 +75,12 @@ var Puppy = (function(){
 
     function defineSource(pName, pData)
     {
-        pName = 'Puppy.'+pName;
         sources[pName] = new DataSource(pData);
         return sources[pName];
     }
 
     return {
-        define: {
-            container:defineContainer,
-            source:defineSource
-        }
+        container:defineContainer,
+        source:defineSource
     }
 })();

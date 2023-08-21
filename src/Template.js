@@ -7,23 +7,31 @@ class EventEmitter
 {
     constructor()
     {
-        let delegate = document.createDocumentFragment();
-        [
-            'addEventListener',
-            'dispatchEvent',
-            'removeEventListener'
-        ].forEach(f => this[f] = (...xs)=>delegate[f](...xs));
+        this.delegate = document.createDocumentFragment();
+    }
+
+    addEventListener(...args){
+        this.delegate.addEventListener(...args);
+    }
+
+    dispatchEvent(event){
+        this.delegate.dispatchEvent(event);
+    }
+
+    removeEventListener(...args){
+        this.delegate.removeEventListener(...args);
     }
 }
 
 class Template extends EventEmitter
 {
-    constructor(pIdTemplate, pContent)
+    constructor(pIdTemplate, pContent = {})
     {
         super();
-        this._content = pContent||{};
+        this._content = pContent;
         this._c = {};
         this._functions = Template.FUNCTIONS||{};
+        this._setReFuncs();
         this.time = null;
         this._id = pIdTemplate;
     }
@@ -36,12 +44,21 @@ class Template extends EventEmitter
     setFunction(pName, pFunction)
     {
         this._functions[pName] = pFunction;
+        this._setReFuncs();
+    }
+
+    _setReFuncs(){
+        let funcs = [];
+        for(let k in this._functions){
+            funcs.push(k);
+        }
+        this.RE_FUNCS = new RegExp(Template.TAG[0]+"("+funcs.join("|")+")\\s([^"+Template.TAG[1]+"]+)"+Template.TAG[1], "gi");
     }
 
     render(pParent)
     {
         let p = pParent;
-        if((typeof p).toLowerCase()=="string")
+        if((typeof p).toLowerCase()==="string")
             p = document.querySelector(pParent);
         if(!p)
             return;
@@ -66,13 +83,13 @@ class Template extends EventEmitter
 
         let tick = _ => {
 
-            if(++i==max)
+            if(++i===max)
                 this.dispatchEvent(new Event(TemplateEvent.RENDER_COMPLETE_LOADED));
         };
 
         images.forEach(img =>
         {
-            if(img.complete && (++i==max))
+            if(img.complete && (++i===max))
             {
                 this.dispatchEvent(new Event(TemplateEvent.RENDER_COMPLETE_LOADED));
             }
@@ -83,7 +100,7 @@ class Template extends EventEmitter
 
     evaluate()
     {
-        this._c = JSON.parse(JSON.stringify(this._content));
+        this._c = Object.assign({}, this._content);
         let start = new Date().getTime();
         let t = Template.$[this._id];
 
@@ -105,9 +122,10 @@ class Template extends EventEmitter
 
         let opened = [];
 
-        while (result = re_blocs.exec(t))
-        {
-            let tag = result[1];
+        let allblocks = [...t.matchAll(re_blocs)];
+
+        allblocks.forEach((pBlock)=>{
+            let tag = pBlock[1];
             if(opener.indexOf(tag)>-1)
             {
                 currentId = ++step;
@@ -121,11 +139,12 @@ class Template extends EventEmitter
             {
                 currentId = opened[0];
             }
-            else
-                continue;
+            else{
+                return;
+            }
 
-            t = t.replace(result[0], tag+"_"+currentId+result[2]);
-        }
+            t = t.replace(pBlock[0], tag+"_"+currentId+pBlock[2]);
+        });
         let evaluation = this._parseBlock(t, this._c);
         let end = new Date().getTime();
         this.time = end - start;
@@ -138,35 +157,40 @@ class Template extends EventEmitter
         let t_1 = Template.TAG[1];
 
         //{opener_X}
-        let opener = new RegExp('\\'+t_0+'([a-z]+)(_[0-9]+)([^\}]*)\\'+t_1, 'i');
+        let opener = new RegExp('\\'+t_0+'([a-z]+)(_[0-9]+)([^\}]*)\\'+t_1, 'gi');
 
         //$path.to.var
-        let rea = /\$([a-z0-9\._\-]+)*/i;
+        let rea = /\$([a-z0-9\-_\\.]+)+(?=\.|>|<|\!|\||=|\s|$)/gi;
 
         let o;
 
-        while(o = opener.exec(pString))
-        {
+        let allblocks = [...pString.matchAll(opener)];
+        allblocks.forEach((pOpener)=>{
+
             let params;
-            let start = o.index;
-            let closer = new RegExp('\\'+t_0+'\/'+o[1]+o[2]+'\\'+t_1, 'gi');
+            let start = pString.indexOf(pOpener[0]);
+            if(start===-1){
+                //Block already replaced
+                return;
+            }
+            let closer = new RegExp('\\'+t_0+'\/'+pOpener[1]+pOpener[2]+'\\'+t_1);
             let c = closer.exec(pString);
 
             if(!c)
             {
                 console.log("no end tag");
-                break;
+                return;
             }
 
-            let blc = pString.substr((start + o[0].length), c.index - (start + o[0].length));
+            let blc = pString.substr((start + pOpener[0].length), c.index - (start + pOpener[0].length));
             let alt = "";
 
-            let neutral = new RegExp('\\'+t_0+'else'+o[2]+'\\'+t_1, 'gi');
+            let neutral = new RegExp('\\'+t_0+'else'+pOpener[2]+'\\'+t_1, 'gi');
 
             let n = neutral.exec(pString);
             if(n)
             {
-                blc = pString.substr(start+o[0].length, n.index - (start + o[0].length));
+                blc = pString.substr(start+pOpener[0].length, n.index - (start + pOpener[0].length));
                 alt = pString.substr(n.index+n[0].length, c.index - (n.index+n[0].length));
             }
 
@@ -175,19 +199,17 @@ class Template extends EventEmitter
             let totalBlock = pString.substr(start, length);
 
             let r = "";
-            switch(o[1])
+            switch(pOpener[1])
             {
                 case "foreach":
-                    params = o[3].split(" ");//Setup [*, tablename, itemname, keyname]
-                    params[1] = params[1].replace("$","");
-                    let d = this._getVariable(params[1], pData);
+
+                    params = Template.parseParams(pOpener[3], {from:null, item:"item", key:"key"});
+                    let d = this._getVariable(params.from, pData);
                     if(d)
                     {
                         let empty = true;
-                        let val = t_0+(params[2]||"$v")+t_1;
-                        let key = t_0+(params[3]||"$k")+t_1;
-                        let c_key = (params[3]||"$k").replace("$", "");
-                        let re = new RegExp("\\"+t_0+"\\"+(params[2]||"$v")+"([a-z0-9\.\_\-]+)*\\"+t_1, "gi");
+                        let c_key = params.key;
+                        let re = new RegExp("\\"+t_0+"\\$"+params.item+"([a-z0-9\.\_\-]+)*\\"+t_1, "gi");
                         for(let j in d)
                         {
                             let vr;
@@ -196,7 +218,7 @@ class Template extends EventEmitter
                             empty = false;
                             let v = blc;
                             let dataCloned = Object.assign({}, pData);//Data cloning
-                            dataCloned[(params[2]||"$v").replace("$", "")] = d[j];
+                            dataCloned[params.item] = d[j];
                             dataCloned[c_key] = j;
                             v = this._parseBlock(v, dataCloned);
                             r += v;
@@ -210,8 +232,8 @@ class Template extends EventEmitter
                         r = this._parseBlock(alt, pData);
                     break;
                 case "if":
-                    let f = this._parseVariables(o[3], pData, rea, true);
-                    while(f[0]==" ")
+                    let f = this._parseVariables(pOpener[3], pData, rea, true);
+                    while(f[0]===" ")
                         f = f.replace(/^\s/, '');
                     if(/^\s*$/.exec(f)||/^(!|=|>|<)/.exec(f)||/(\||&)(!|=|>|<)/.exec(f))
                         f = false;
@@ -220,60 +242,91 @@ class Template extends EventEmitter
                     r = this._parseBlock(r, pData);
                     break;
                 default:
-                    continue;
-                    break;
+                    return;
             }
-
             pString = pString.replace(totalBlock, r);
-        }
-
-        pString = this._parseVariables(pString, pData, Template.REGEXP_VAR);
-
-        let func;
-        while(func = Template.REGEXP_FUNC.exec(pString))
-        {
-            let funcName = func[1];
+        });
+        let allFuncs = [...pString.matchAll(this.RE_FUNCS)];
+        allFuncs.forEach((pFunc)=>{
+            let funcName = pFunc[1];
             let p = [];
             if(!this._functions[funcName])
             {
                 throw new Error("Call to undefined function "+funcName);
             }
-            let params = func[2];
-            params = params.replace(/,\s/g, ",");
-            params = params.split(",");
-            for(let i = 0, max = params.length;i<max;i++)
-            {
-                if(params[i][0]=="$")
-                    p.push(this._getVariable(params[i], pData));
-                else
-                {
-                    if(/^[0-9][0-9\.]*[0-9]*$/.exec(params[i]))
-                        params[i] = Number(params[i]);
-                    if(/^("|')/.exec(params[i]))
-                        params[i] = params[i].substr(1, params[i].length-2);
-                    p.push(params[i]);
+
+            let params = Template.parseParams(pFunc[2], {}, false);
+            for(let k in params){
+                if(!params.hasOwnProperty(k)){
+                    continue;
+                }
+
+                if(params[k]){
+                    if(params[k][0]==="$"){
+                        params[k] = this._getVariable(params[k].replace("$", ""), pData);
+                    }
+                    else
+                    {
+                        if(/^[0-9][0-9\.]*[0-9]*$/.exec(params[k]))
+                            params[k] = Number(params[k]);
+                        if(/^("|')/.exec(params[k]))
+                            params[k] = params[k].substr(1, params[k].length-2);
+                    }
                 }
             }
-            p.push(pData);
-            pString = pString.replace(func[0], this._functions[funcName].apply(null, p));
-        }
+
+            let pa = /function\(([^\)]+)\)/.exec(this._functions[funcName].toString());
+
+            if(pa){
+                pa = pa[1].split(',').map((pName)=>pName.trim());
+                pa.forEach((pName)=>{
+                    p.push(params[pName]||null);
+                });
+            }
+            p.push(params);
+            pString = pString.replace(pFunc[0], this._functions[funcName].apply(null, p));
+        });
+
+        let allVars = [...pString.matchAll(Template.REGEXP_VAR)];
+        allVars.forEach((pRes)=>{
+            let val = this._parseVariables("$"+pRes[1], pData, rea);
+            pString = pString.replace(pRes[0], val);
+        });
 
         return pString;
     }
 
-    _parseVariables(pString, pData, pREGEXP, pEscapeString)
+    _parseVariables(pString, pData, pREGEXP = Template.REGEXP_ID, pEscapeString = false)
     {
-        pEscapeString = pEscapeString||false;
-        pREGEXP = pREGEXP||Template.REGEXP_ID;
         let res;
         while(res = pREGEXP.exec(pString))
         {
             let value = this._getVariable(res[1], pData);
             if(pEscapeString&& (typeof value )== "string")
                 value = "'"+value.replace(/\'/g, "\\'")+"'";
+            if(pString.indexOf("()")>-1){
+                let method = pString.replace("$"+res[1]+".", "").replace("()", "");
+                res[0] = "$"+res[1]+"."+method+"()";
+                value = value[method]();
+            }
             pString = pString.replace(res[0], value);
         }
         return pString;
+    }
+
+    static parseParams(pString, pDefaults, pEscape = true){
+        pString = pString.split(" ");
+        let params = {...pDefaults};
+        let index = 0;
+        pString.filter((pVal)=>pVal.length).forEach((pParam)=>{
+            let [name, val] = pParam.split('=');
+            if(!val){
+                val = name;
+                name = "param"+(index++);
+            }
+            params[name] = pEscape?val.replace(/("|'|\$)/g, ''):val;
+        });
+        return params;
     }
 
     _getVariable(pName, pContext)
@@ -359,7 +412,7 @@ TemplateEvent.RENDER_COMPLETE_LOADED = "evt_render_loaded_complete";
 
 Template.TAG = ["{", "}"];
 Template.REGEXP_FUNC = new RegExp("\\"+Template.TAG[0]+"\\=([^(]+)\\(([^"+Template.TAG[1]+"]+)\\)\\"+Template.TAG[1], "i");
-Template.REGEXP_VAR = new RegExp("\\"+Template.TAG[0]+"\\$([a-z0-9\.\_\-]+)*\\"+Template.TAG[1], "i");
+Template.REGEXP_VAR = new RegExp("\\"+Template.TAG[0]+"\\$([a-z0-9\\._\\-\\(\\)]+)*\\"+Template.TAG[1], "gi");
 Template.REGEXP_ID = new RegExp("([a-z0-9\.\_\-]+)", "i");
 Template.SCRIPT_TYPE = 'text/template';
 
@@ -367,50 +420,42 @@ Template.$ = {};
 
 Template.FUNCTIONS =
 {
-	truncate:function(pString, pLength, pEnd)
+	truncate:function(string, length, end)
 	{
-		pLength = pLength||80;
-		pEnd = pEnd||"...";
-		if(pString.length<=pLength)
-			return pString;
-		pString = pString.substr(0, pLength-pEnd.length);
-		return pString+pEnd;
+        length = length||80;
+        end = end||"...";
+		if(string.length<=length)
+			return string;
+        string = string.substr(0, length-end.length);
+		return string+end;
 	},
-	uppercase:function(pString)
+	uppercase:function(string)
 	{
-		return pString.toUpperCase();
+		return string.toUpperCase();
 	},
-	lowercase:function(pString)
+	lowercase:function(string)
 	{
-		return pString.toLowerCase();
+		return string.toLowerCase();
 	},
-	replace:function(pString, pSearch, pReplace, pFlags)
+	replace:function(string, search, replace, flags)
 	{
-		pFlags = pFlags||"gi";
-        let re = new RegExp(pSearch, pFlags);
-		return pString.replace(re, pReplace);
+        flags = flags||"gi";
+        let re = new RegExp(search, flags);
+		return string.replace(re, replace);
 	},
 	add:function()
 	{
+        let values = arguments[0];
         let result = 0;
-		for(let i = 0, max = arguments.length-1;i<max;i++)
-		{
-			result+=Number(arguments[i]);
-		}
-		return result;
-	},
-    include:function(pId)
-    {
-        let last = arguments.length-1;
-        let vars = arguments[last];
-        for(let i = 1;i<last;i++)
-        {
-            let v = arguments[i].split('=');
-            if(v.length!=2)
-                continue;
-            vars[v[0]] = v[1].replace(/"/g, '').replace(/'/g, '');
+        for(let i in values){
+            result += Number(values[i]);
         }
-        let t = new Template(pId, vars);
+        return result;
+	},
+    include:function(id)
+    {
+        let vars = arguments[arguments.length-1];
+        let t = new Template(id, vars);
         return t.evaluate();
     }
 };

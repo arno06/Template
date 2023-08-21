@@ -2,8 +2,17 @@
 <html>
 	<head>
 		<title>Template.js - Sample</title>
-		<script src="../../Dependencies/src/?need=Template"></script>
+		<script src="../src/Template.js"></script>
 		<script>
+        class Test{
+            constructor() {
+
+            }
+
+            getPropString(){
+                return "From Test.getPropString()";
+            }
+        }
 		function init()
 		{
             var obj = {
@@ -13,7 +22,8 @@
                 "number_entry":12,
                 "string_number_entry":"123",
                 "boolean":true,
-                "null_prop":null
+                "null_prop":null,
+                "obj":{"label":"subObjectLabel"}
             };
             var emptyArray = [];
 			var table = ["This", "is", "spartaaa", "...", "foo", "bar"];
@@ -21,7 +31,9 @@
 			tpl.assign("myTable", table);
 			tpl.assign("test1", 42);
 			tpl.assign("test2", 6);
+			tpl.assign("aString", "Bouboup My Friend");
             tpl.assign("obj", obj);
+            tpl.assign("test_ins", new Test());
             tpl.assign("arrayObj", [obj, obj, obj, obj, obj]);
             tpl.assign("emptyArray", emptyArray);
 			tpl.addEventListener(TemplateEvent.RENDER_INIT, tplRenderInitHandler, false);
@@ -53,17 +65,21 @@
 		<h1>Template.js - Sample</h1>
 		<div id="holder"></div>
 <script type="text/template" id="test_tpl">
-        <h3>This is an include {$custom_var}</h3>
-        <h4>{$named_var}</h4>
+        <h3>This is an include : $custom_var = {$custom_var}</h3>
+        <h4>$named_var = {$named_var}</h4>
     <h5>{$test1}</h5>
 </script>
 		<script type="text/template" id="id_tpl">
 			<h2>Hello {$test1}</h2>
+            <h3>String</h3>
+            <p>The String : {$aString}</p>
+            <p>Length : {$aString.length}</p>
+            {if $aString.indexOf("Bouboup")>-1}<p>Contains "Bouboup"</p>{/if}
             <h3>Iterate on Array</h3>
 			<ul>
-			{foreach $myTable $item $key}
+			{foreach $myTable}
 				<li>{$item} : {if $key%2==0} even {else} odd {/if}
-					{$key} : {=add($key, 1)}
+					{$key} : {add $key 1}
 				</li>
 			{/foreach}
 			</ul>
@@ -74,29 +90,35 @@
 				<li>$test1>=0&&$test2>=0 {if $test1>=0&&$test2>=0}ok{else}ko{/if}</li>
 			</ul>
             <h3>Include function</h3>
-            {=include("test_tpl", custom_var="test", named_var="foo")}
+            {include id="test_tpl" custom_var="test" named_var="foo"}
             <h3>Iterate on Object</h3>
             <ul>
-            {foreach $obj $value $key}
+            {foreach from=$obj item="value"}
                 <li>{$key} : {$value}</li>
             {/foreach}
             </ul>
             <h3>Empty Array</h3>
             <ul>
-                {foreach $emptyArray $value $key}
+                {foreach from=$emptyArray item="value"}
                 <li>{$key} : {$value}</li>
                 {else}
                 <li>Yes, empty array.</li>
                 {/foreach}
             </ul>
             <h3>Object[]</h3>
-            {foreach $arrayObj $value $key}
+            {foreach from=$arrayObj item="value"}
                 <ul>
-                    {foreach $value $item $n}
+                    {foreach from=$value key="n"}
                         <li>{$n} : {$item}</li>
                     {/foreach}
                 </ul>
             {/foreach}
+            <h3>Method from Class Instance</h3>
+            <ul>
+                <li>{$test_ins.getPropString()}</li>
+                <li>$obj.label : {$obj.label}</li>
+                <li>$obj.obj.label : {$obj.obj.label}</li>
+            </ul>
 		</script>
 	</body>
 </html>

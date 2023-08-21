@@ -3,18 +3,18 @@
     <head lang="en">
         <meta charset="UTF-8">
         <title>Puppy</title>
-        <script src="../../Dependencies/src/?need=Template"></script>
-        <script src="../src/Puppy.js"></script>
+        <script src="../src/Template.js"></script>
+        <script src="../src/TemplateDataBinding.js"></script>
     </head>
     <body>
         <div>
             <button onclick="switchSources()">Switch Source</button>
         </div>
-        <div id="myContainer" data-handler="Puppy" data-source="Puppy.mySample" data-template="myTemplate"></div>
+        <div id="myContainer" data-source="mySample" data-template="myTemplate"></div>
         <script type="text/template" id="myTemplate">
             <h1>Hello {$who}</h1>
             <ul>
-                {foreach $itera $item}
+                {foreach from=$itera}
                 <li>{$item}</li>
                 {/foreach}
             </ul>
@@ -35,12 +35,12 @@
             function switchSources()
             {
                 current = !current?1:0;
-                sample.setData(sources[current]);
+                sample.data = sources[current];
             }
             function init()
             {
-                sample = Puppy.define.source('mySample', sources[current]);
-                Puppy.define.container(document.querySelector('#myContainer'));
+                sample = Template.DataBinding.source('mySample', sources[current]);
+                Template.DataBinding.container(document.querySelector('#myContainer'));
             }
             window.addEventListener('DOMContentLoaded', init, false);
         </script>

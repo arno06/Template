@@ -1,26 +1,24 @@
 Template
-===========
+===
+JS Template engine
 
 Features
-------------
+---
 * Variables (String, Number, Array, Object)
-* Loops (for Array only)
+* Loops
 * Conditions
-* Functions (in progress)
+* Functions
 * Event based
 * Smarty'ish syntax
 * ES6 Compliant
-
-Todo
-------------
-* [x] Includes
+* Template inclusion
 
 Dependencies
-------------
+---
 * [Request](http://github.com/arno06/Request) : Async template loading
 
 Example
-------------
+---
 Html template definition :
 
 ```html
@@ -28,30 +26,29 @@ Html template definition :
 <html>
 	<head>
 		<title>Template.js - Sample</title>
-		<script src="js/Template.js"></script>
-		<script src="js/Sample.js"></script>
+		<script src="Template.js"></script>
 	</head>
 	<body>
 		<h1>Template.js - Sample</h1>
 		<div id="holder"></div>
-		<script type="text/template" id="includeTpl">
-		<div>This is an include</div>
-		<div>{$some_custom_var}</div>
-		<div>{$var1}</div>
-		</script>
-		<script type="text/template" id="firstTemplate">
-			<h2>Hello {$var1}</h2>
-			<ul>
-			{foreach $myTable $item $key}
-				<li>{$item} : {if $key%2==0} even {else} odd {/if}</li>
-			{else}
-			<li>Empty Table</li>
-			{/foreach}
-			</ul>
-			<p>Hi, I am {$me.name} and I am in a {$me.mood} mood.</p>
-			<p>fooFunc : {=fooFunc()}</p>
-			{=include("includeTpl", some_custom_var="hell yeah")}
-		</script>
+        <script type="text/template" id="includeTpl">
+            <div>This is an include</div>
+            <div>{$var}</div>
+            <div>{$var1}</div>
+        </script>
+        <script type="text/template" id="firstTemplate">
+            <h2>Hello {$var1}</h2>
+            <ul>
+                {foreach from=$myTable}
+                <li>{$item} : {if $key%2==0} even {else} odd {/if}</li>
+                {else}
+                <li>Empty Table</li>
+                {/foreach}
+            </ul>
+            <p>Hi, I am {$me.name} and I am in a {$me.mood} mood.</p>
+            <p>fooFunc : {fooFunc named_var="value"}</p>
+            {include id="includeTpl" var="hello" var1=$var1}
+        </script>
 	</body>
 </html>
 ```
@@ -60,46 +57,48 @@ Javascript part (js/Sample.js) :
 ```js
 function init()
 {
-	var fooFunc = function(){return "bar"};
-	var table = ["This", "must", "work"];
-	var me = {"name":"Template.js", "mood":"pretty good"};
-	var tpl = new Template("firstTemplate");
-	tpl.assign("var1", "world");
-	tpl.assign("me", me);
-	tpl.assign("myTable", table);
-	tpl.setFunction("fooFunc", fooFunc);
-	tpl.addEventListener(TemplateEvent.RENDER_INIT, tplRenderInitHandler, false);
-	tpl.addEventListener(TemplateEvent.RENDER_COMPLETE, tplRenderCompleteHandler, false);
-	tpl.addEventListener(TemplateEvent.RENDER_COMPLETE_LOADED, tplRenderCompleteLoadedHandler, false);
-	tpl.render("#holder");
+    var fooFunc = function(named_var){return "bar "+named_var;};
+    var table = ["This", "must", "work"];
+    var me = {"name":"Template.js", "mood":"pretty good"};
+    var tpl = new Template("firstTemplate");
+    tpl.assign("var1", "world");
+    tpl.assign("me", me);
+    tpl.assign("myTable", table);
+    tpl.setFunction("fooFunc", fooFunc);
+    tpl.addEventListener(TemplateEvent.RENDER_INIT, tplRenderInitHandler, false);
+    tpl.addEventListener(TemplateEvent.RENDER_COMPLETE, tplRenderCompleteHandler, false);
+    tpl.addEventListener(TemplateEvent.RENDER_COMPLETE_LOADED, tplRenderCompleteLoadedHandler, false);
+    tpl.render("#holder");
 }
 window.addEventListener("load", init, false);
 
 function tplRenderInitHandler(e)
 {
-	console.log("Sample.js : init");
+    console.log("Sample.js : init");
 }
 
 function tplRenderCompleteHandler(e)
 {
-	//Ready to display result
-	console.log("Sample.js : complete");
+    //Ready to display result
+    console.log("Sample.js : complete");
 }
 
 function tplRenderCompleteLoadedHandler(e)
 {
-	//Ready to display & everything is loaded (images)
-	console.log("Sample.js : complete & loaded");
+    //Ready to display & everything is loaded (images)
+    console.log("Sample.js : complete & loaded");
 }
 ```
 
 API Reference
--------------
+---
 ### Template
-#### Template(pIdTemplate)
+
+#### Template(pIdTemplate, pData)
 Constructor - Instanciate a Template Object
 
 * pIdTemplate (*string*) : Script template's id within DOM
+* pData (*object*) : Default assigned data
 
 #### assign(pName, pValue)
 Variable asignation method
@@ -121,9 +120,9 @@ Function definition method
 * pName (*string*) : Function's name
 * pFunction (*function*) : function to execute each time template refer to it
 ```js
-tpl.setFunction("round", function(pValue)
+tpl.setFunction("round", function(value)
 {
-	return Math.round(pValue);
+	return Math.round(value);
 });
 ```
 
@@ -143,6 +142,7 @@ tpl.setFunction("round", function(pValue)
 (inherited) 
 
 ### TemplateEvent
+
 #### RENDER_INIT
 Event triggered once rendering initialized
 
