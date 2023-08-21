@@ -2,8 +2,7 @@
 <html>
 	<head>
 		<title>JS Templating</title>
-		<link href="../../common/docs/docs.css" rel="stylesheet" type="text/css">
-		<script src="../../Dependencies/src/?need=Template"></script>
+		<script src="../src/Template.js"></script>
 		<script>
 			function init()
 			{
@@ -18,10 +17,10 @@
 				]);
 				t.setFunction("add2", function()
 				{
-					var result = 0;
-					for(var i = 0, max = arguments.length;i<max;i++)
-					{
-						result+=Number(arguments[i]);
+					let values = arguments[0];
+					let result = 0;
+					for(let i in values){
+						result += Number(values[i]);
 					}
 					return result;
 				});
@@ -45,26 +44,26 @@
 				</tr>
 				<tr>
 					<td>Truncate :</td>
-					<td>{=truncate($lorem, 25, '...')}</td>
+					<td>{truncate string=$lorem length=25 end='...'}</td>
 				</tr>
 				<tr>
 					<td>Uppercase :</td>
-					<td>{=uppercase($lorem)}</td>
+					<td>{uppercase string=$lorem}</td>
 				</tr>
 				<tr>
 					<td>Lowercase :</td>
-					<td>{=lowercase($lorem)}</td>
+					<td>{lowercase string=$lorem}</td>
 				</tr>
 				<tr>
 					<td>Replace :</td>
-					<td>{=replace($lorem, 'i', '!', 'gi')}</td>
+					<td>{replace string=$lorem search='i' replace='!' flags='gi'}</td>
 				</tr>
 			</table>
 			<h3>Custom : addition</h3>
 			<ul>
-				{foreach $table $item $key}
+				{foreach from=$table}
 				<li>
-					{$baseValue}+{$item.value1}+{$item.value2}+{$key}={=add($baseValue, $item.value1, $item.value2, $key)}
+					{$baseValue}+{$item.value1}+{$item.value2}+{$key}={add2 $baseValue $item.value1 $item.value2 $key}
 				</li>
 				{/foreach}
 			</ul>

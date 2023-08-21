@@ -2,8 +2,7 @@
 <html>
 	<head>
 		<title>JS Templating</title>
-		<link href="../../common/docs/docs.css" rel="stylesheet" type="text/css">
-		<script src="../../Dependencies/src/?need=Template"></script>
+		<script src="../src/Template.js"></script>
 		<script>
 			function init()
 			{
@@ -37,7 +36,7 @@
 			</ul>
 			<h3>Tableau foreach</h3>
 			<ul>
-				{foreach $table1 $item $key}
+				{foreach from=$table1}
 				<li>{$key} {$item}
 					{if $key%2!=0}
 						odd
@@ -49,7 +48,7 @@
 			</ul>
 			<h3>Tableau foreach else</h3>
 			<ul>
-				{foreach $tableEmpty $item $key}
+				{foreach from=$tableEmpty}
 				<li>{$key} {$item}</li>
 				{else}
 				<li>Vide</li>
@@ -57,9 +56,9 @@
 			</ul>
 			<h3>Tableau foreach objet</h3>
 			<ul>
-				{foreach $names $item $key}
+				{foreach from=$names}
 				<li>{$item.t} {$item.test}
-					{foreach $item.toto $n}
+					{foreach from=$item.toto item="n"}
 						{$n},
 					{else}
 						Nothing to see here
