@@ -160,7 +160,7 @@ class Template extends EventEmitter
         let opener = new RegExp('\\'+t_0+'([a-z]+)(_[0-9]+)([^\}]*)\\'+t_1, 'gi');
 
         //$path.to.var
-        let rea = /\$([a-z0-9\-_\\.]+)+(?=\.|>|<|\!|\||=|\s|$)/gi;
+        let rea = /\$([a-z0-9\-_\\.]+)+(?=\.|>|<|\!|\||=|\s|\)|%|,|$)/gi;
 
         let o;
 

@@ -29,8 +29,10 @@
 			var table = ["This", "is", "spartaaa", "...", "foo", "bar"];
 			var tpl = new Template("id_tpl");
 			tpl.assign("myTable", table);
-			tpl.assign("test1", 42);
+			tpl.assign("testName", "Template Advance Testing");
+			tpl.assign("test1", -1);
 			tpl.assign("test2", 6);
+			tpl.assign("boup", "Bouboup");
 			tpl.assign("aString", "Bouboup My Friend");
             tpl.assign("obj", obj);
             tpl.assign("test_ins", new Test());
@@ -70,24 +72,44 @@
     <h5>{$test1}</h5>
 </script>
 		<script type="text/template" id="id_tpl">
-			<h2>Hello {$test1}</h2>
+			<h2>Hello {$testName}</h2>
             <h3>String</h3>
-            <p>The String : {$aString}</p>
-            <p>Length : {$aString.length}</p>
-            {if $aString.indexOf("Bouboup")>-1}<p>Contains "Bouboup"</p>{/if}
+            <p>&lbrace;$aString&rbrace; : {$aString}</p>
+            <p>&lbrace;$aString.length&rbrace; : {$aString.length}</p>
+            <p>&lbrace;if $aString.indexOf("Bouboup")>-1&rbrace; : {if $aString.indexOf("Bouboup")>-1}Contains "Bouboup" (tested with a const){/if}</p>
+            <p>&lbrace;if $aString.indexOf($boup)>-1&rbrace; : {if $aString.indexOf($boup)>-1}Contains "Bouboup" (but tested with a var) - yep it works{/if}</p>
             <h3>Iterate on Array</h3>
-			<ul>
-			{foreach $myTable}
-				<li>{$item} : {if $key%2==0} even {else} odd {/if}
-					{$key} : {add $key 1}
-				</li>
+            <table>
+                <tr>
+                    <th>Key</th>
+                    <th>Value</th>
+                    <th>Even/odd</th>
+                    <th>Key+1</th>
+                </tr>
+			{foreach from=$myTable}
+                <tr>
+                    <td>{$key}</td>
+                    <td>{$item}</td>
+                    <td>{if $key%2==0} even {else} odd {/if}</td>
+                    <td>{add $key 1}</td>
+                </tr>
 			{/foreach}
-			</ul>
-			<h3>Condition test</h3>
+            </table>
+            <h3>Empty Array</h3>
+            <ul>
+                {foreach from=$emptyArray item="value"}
+                <li>{$key} : {$value}</li>
+                {else}
+                <li>Yes, empty array.</li>
+                {/foreach}
+            </ul>
+			<h3>Conditions</h3>
 			<ul>
-				<li>$test1>=0 {if $test1>=0}ok{else}ko{/if}</li>
-				<li>$test2>=0 {if $test2>=0}ok{else}ko{/if}</li>
-				<li>$test1>=0&&$test2>=0 {if $test1>=0&&$test2>=0}ok{else}ko{/if}</li>
+                <li>&lbrace;$test1&rbrace; = {$test1}</li>
+                <li>&lbrace;$test2&rbrace; = {$test2}</li>
+				<li>&lbrace;if $test1>=0&rbrace; : {if $test1>=0}ok{else}ko{/if}</li>
+				<li>&lbrace;if $test2>=0&rbrace; : {if $test2>=0}ok{else}ko{/if}</li>
+				<li>&lbrace;if $test1===-1&&$test2>=0&rbrace; : {if $test1===-1&&$test2>=0}ok{else}ko{/if}</li>
 			</ul>
             <h3>Include function</h3>
             {include id="test_tpl" custom_var="test" named_var="foo"}
@@ -97,22 +119,19 @@
                 <li>{$key} : {$value}</li>
             {/foreach}
             </ul>
-            <h3>Empty Array</h3>
+            <h3>Objects</h3>
             <ul>
-                {foreach from=$emptyArray item="value"}
-                <li>{$key} : {$value}</li>
-                {else}
-                <li>Yes, empty array.</li>
-                {/foreach}
-            </ul>
-            <h3>Object[]</h3>
+
             {foreach from=$arrayObj item="value"}
-                <ul>
-                    {foreach from=$value key="n"}
+                <li><div>Object index {$key} - Iterate upon props :</div>
+                    <ul>
+                        {foreach from=$value key="n"}
                         <li>{$n} : {$item}</li>
-                    {/foreach}
-                </ul>
+                        {/foreach}
+                    </ul>
+                </li>
             {/foreach}
+            </ul>
             <h3>Method from Class Instance</h3>
             <ul>
                 <li>{$test_ins.getPropString()}</li>
