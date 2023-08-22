@@ -31,7 +31,7 @@ class Template extends EventEmitter
         this._content = pContent;
         this._c = {};
         this._functions = Template.FUNCTIONS||{};
-        this._setReFuncs();
+        this._updateFunctionRE();
         this.time = null;
         this._id = pIdTemplate;
     }
@@ -44,15 +44,12 @@ class Template extends EventEmitter
     setFunction(pName, pFunction)
     {
         this._functions[pName] = pFunction;
-        this._setReFuncs();
+        this._updateFunctionRE();
     }
 
-    _setReFuncs(){
-        let funcs = [];
-        for(let k in this._functions){
-            funcs.push(k);
-        }
-        this.RE_FUNCS = new RegExp(Template.TAG[0]+"("+funcs.join("|")+")\\s([^"+Template.TAG[1]+"]+)"+Template.TAG[1], "gi");
+    _updateFunctionRE(){
+        let fName = Object.getOwnPropertyNames(this._functions);
+        this.RE_FUNCS = new RegExp(Template.TAG[0]+"("+fName.join("|")+")\\s([^"+Template.TAG[1]+"]+)"+Template.TAG[1], "gi");
     }
 
     render(pParent)
@@ -118,13 +115,13 @@ class Template extends EventEmitter
 
         let step = 0;
 
-        let result, currentId;
+        let currentId;
 
         let opened = [];
 
-        let allblocks = [...t.matchAll(re_blocs)];
+        let allBlocks = [...t.matchAll(re_blocs)];
 
-        allblocks.forEach((pBlock)=>{
+        allBlocks.forEach((pBlock)=>{
             let tag = pBlock[1];
             if(opener.indexOf(tag)>-1)
             {
@@ -160,13 +157,10 @@ class Template extends EventEmitter
         let opener = new RegExp('\\'+t_0+'([a-z]+)(_[0-9]+)([^\}]*)\\'+t_1, 'gi');
 
         //$path.to.var
-        let rea = /\$([a-z0-9\-_\\.]+)+(?=\.|>|<|\!|\||=|\s|\)|%|,|$)/gi;
+        let rea = /\$([a-z0-9\-_\\.]+)+(?=\.|>|<|!|\||=|\s|\)|%|,|$)/gi;
 
-        let o;
-
-        let allblocks = [...pString.matchAll(opener)];
-        allblocks.forEach((pOpener)=>{
-
+        let allBlocks = [...pString.matchAll(opener)];
+        allBlocks.forEach((pOpener)=>{
             let params;
             let start = pString.indexOf(pOpener[0]);
             if(start===-1){
@@ -182,7 +176,7 @@ class Template extends EventEmitter
                 return;
             }
 
-            let blc = pString.substr((start + pOpener[0].length), c.index - (start + pOpener[0].length));
+            let blc = pString.substring((start + pOpener[0].length), c.index);
             let alt = "";
 
             let neutral = new RegExp('\\'+t_0+'else'+pOpener[2]+'\\'+t_1, 'gi');
@@ -190,13 +184,11 @@ class Template extends EventEmitter
             let n = neutral.exec(pString);
             if(n)
             {
-                blc = pString.substr(start+pOpener[0].length, n.index - (start + pOpener[0].length));
-                alt = pString.substr(n.index+n[0].length, c.index - (n.index+n[0].length));
+                blc = pString.substring(start+pOpener[0].length, n.index);
+                alt = pString.substring(n.index+n[0].length, c.index);
             }
 
-            let length = (c.index + c[0].length) - start;
-
-            let totalBlock = pString.substr(start, length);
+            let totalBlock = pString.substring(start, (c.index + c[0].length));
 
             let r = "";
             switch(pOpener[1])
@@ -209,10 +201,8 @@ class Template extends EventEmitter
                     {
                         let empty = true;
                         let c_key = params.key;
-                        let re = new RegExp("\\"+t_0+"\\$"+params.item+"([a-z0-9\.\_\-]+)*\\"+t_1, "gi");
                         for(let j in d)
                         {
-                            let vr;
                             if(!d.hasOwnProperty(j))
                                 continue;
                             empty = false;
@@ -235,9 +225,10 @@ class Template extends EventEmitter
                     let f = this._parseVariables(pOpener[3], pData, rea, true);
                     while(f[0]===" ")
                         f = f.replace(/^\s/, '');
-                    if(/^\s*$/.exec(f)||/^(!|=|>|<)/.exec(f)||/(\||&)(!|=|>|<)/.exec(f))
+                    if(/^\s*$/.exec(f)||/^([!=><])/.exec(f)||/([\\|&])([!=><])/.exec(f))
                         f = false;
-                    let cond = eval("(_ => {let r = false; try { r = "+f+"; } catch(e){ r= false;} return r;})()");
+                    const c = '(_ => {let r=false;try{r = '+f+';}catch(e){r= false;} return r;})()';
+                    let cond = eval(c);
                     r = cond?blc:(alt||"");
                     r = this._parseBlock(r, pData);
                     break;
@@ -246,8 +237,8 @@ class Template extends EventEmitter
             }
             pString = pString.replace(totalBlock, r);
         });
-        let allFuncs = [...pString.matchAll(this.RE_FUNCS)];
-        allFuncs.forEach((pFunc)=>{
+        let allFunctions = [...pString.matchAll(this.RE_FUNCS)];
+        allFunctions.forEach((pFunc)=>{
             let funcName = pFunc[1];
             let p = [];
             if(!this._functions[funcName])
@@ -267,15 +258,15 @@ class Template extends EventEmitter
                     }
                     else
                     {
-                        if(/^[0-9][0-9\.]*[0-9]*$/.exec(params[k]))
+                        if(/^[0-9][0-9\\.]*[0-9]*$/.exec(params[k]))
                             params[k] = Number(params[k]);
-                        if(/^("|')/.exec(params[k]))
-                            params[k] = params[k].substr(1, params[k].length-2);
+                        if(/^(["'])/.exec(params[k]))
+                            params[k] = params[k].substring(1, params[k].length-1);
                     }
                 }
             }
 
-            let pa = /function\(([^\)]+)\)/.exec(this._functions[funcName].toString());
+            let pa = /function\(([^\\)]+)\)/.exec(this._functions[funcName].toString());
 
             if(pa){
                 pa = pa[1].split(',').map((pName)=>pName.trim());
@@ -303,7 +294,7 @@ class Template extends EventEmitter
         {
             let value = this._getVariable(res[1], pData);
             if(pEscapeString&& (typeof value )== "string")
-                value = "'"+value.replace(/\'/g, "\\'")+"'";
+                value = "'"+value.replace(/'/g, "\\'")+"'";
             if(pString.indexOf("()")>-1){
                 let method = pString.replace("$"+res[1]+".", "").replace("()", "");
                 res[0] = "$"+res[1]+"."+method+"()";
@@ -324,7 +315,7 @@ class Template extends EventEmitter
                 val = name;
                 name = "param"+(index++);
             }
-            params[name] = pEscape?val.replace(/("|'|\$)/g, ''):val;
+            params[name] = pEscape?val.replace(/(["'\\$])/g, ''):val;
         });
         return params;
     }
@@ -354,6 +345,10 @@ class Template extends EventEmitter
 
     static load(pDataList)
     {
+        if(!Request||!Request.onComplete){
+            console.warn("Missing Request Lib");
+            return;
+        }
         let _data = [];
         for(let i in pDataList)
         {
@@ -405,7 +400,7 @@ class Template extends EventEmitter
         });
     }
 }
-var TemplateEvent = {};
+const TemplateEvent = {};
 TemplateEvent.RENDER_INIT = "evt_render_start";
 TemplateEvent.RENDER_COMPLETE = "evt_render_complete";
 TemplateEvent.RENDER_COMPLETE_LOADED = "evt_render_loaded_complete";
@@ -459,7 +454,5 @@ Template.FUNCTIONS =
         return t.evaluate();
     }
 };
-
-NodeList.prototype.forEach||(NodeList.prototype.forEach = Array.prototype.forEach);
 
 window.addEventListener("DOMContentLoaded", Template.setup, false);
