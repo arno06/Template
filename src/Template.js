@@ -28,6 +28,7 @@ class Template extends EventEmitter
     constructor(pIdTemplate, pContent = {})
     {
         super();
+        this.unescapeVars = true;
         this._content = pContent;
         this._c = {};
         this._functions = Template.FUNCTIONS||{};
@@ -143,6 +144,9 @@ class Template extends EventEmitter
             t = t.replace(pBlock[0], tag+"_"+currentId+pBlock[2]);
         });
         let evaluation = this._parseBlock(t, this._c);
+        if(this.unescapeVars){
+            evaluation = evaluation.replaceAll(new RegExp(Template.VAR_ESC, 'g'), '{$');
+        }
         let end = new Date().getTime();
         this.time = end - start;
         return evaluation;
@@ -266,7 +270,7 @@ class Template extends EventEmitter
                 }
             }
 
-            let pa = /function\(([^\\)]+)\)/.exec(this._functions[funcName].toString());
+            let pa = /function\s*\(([^\\)]+)\)/.exec(this._functions[funcName].toString());
 
             if(pa){
                 pa = pa[1].split(',').map((pName)=>pName.trim());
@@ -275,7 +279,7 @@ class Template extends EventEmitter
                 });
             }
             p.push(params);
-            pString = pString.replace(pFunc[0], this._functions[funcName].apply(null, p));
+            pString = pString.replace(pFunc[0], this._functions[funcName].apply(this, p));
         });
 
         let allVars = [...pString.matchAll(Template.REGEXP_VAR)];
@@ -283,7 +287,6 @@ class Template extends EventEmitter
             let val = this._parseVariables("$"+pRes[1], pData, rea);
             pString = pString.replace(pRes[0], val);
         });
-
         return pString;
     }
 
@@ -293,12 +296,20 @@ class Template extends EventEmitter
         while(res = pREGEXP.exec(pString))
         {
             let value = this._getVariable(res[1], pData);
-            if(pEscapeString&& (typeof value )== "string")
-                value = "'"+value.replace(/'/g, "\\'")+"'";
+            if(pEscapeString){
+                if((typeof value ) === "string"){
+                    value = "'"+value.replace(/'/g, "\\'")+"'";
+                }else{
+                    value = JSON.stringify(value);
+                }
+            }
             if(pString.indexOf("()")>-1){
                 let method = pString.replace("$"+res[1]+".", "").replace("()", "");
                 res[0] = "$"+res[1]+"."+method+"()";
                 value = value[method]();
+            }
+            if((typeof value) === "string") {
+                value = value.replaceAll(/\{\$/g, Template.VAR_ESC);
             }
             pString = pString.replace(res[0], value);
         }
@@ -405,6 +416,7 @@ TemplateEvent.RENDER_INIT = "evt_render_start";
 TemplateEvent.RENDER_COMPLETE = "evt_render_complete";
 TemplateEvent.RENDER_COMPLETE_LOADED = "evt_render_loaded_complete";
 
+Template.VAR_ESC = '<<@>>'
 Template.TAG = ["{", "}"];
 Template.REGEXP_FUNC = new RegExp("\\"+Template.TAG[0]+"\\=([^(]+)\\(([^"+Template.TAG[1]+"]+)\\)\\"+Template.TAG[1], "i");
 Template.REGEXP_VAR = new RegExp("\\"+Template.TAG[0]+"\\$([a-z0-9\\._\\-\\(\\)]+)*\\"+Template.TAG[1], "gi");
@@ -413,44 +425,43 @@ Template.SCRIPT_TYPE = 'text/template';
 
 Template.$ = {};
 
-Template.FUNCTIONS =
-{
-	truncate:function(string, length, end)
-	{
+Template.FUNCTIONS = {
+    truncate:function(string, length, end) {
         length = length||80;
         end = end||"...";
-		if(string.length<=length)
-			return string;
-        string = string.substr(0, length-end.length);
-		return string+end;
-	},
-	uppercase:function(string)
-	{
-		return string.toUpperCase();
-	},
-	lowercase:function(string)
-	{
-		return string.toLowerCase();
-	},
-	replace:function(string, search, replace, flags)
-	{
+        if(string.length<=length)
+            return string;
+        string = string.substring(0, length);
+        return string+end;
+    },
+    uppercase:function(string)
+    {
+        return string.toUpperCase();
+    },
+    lowercase:function(string)
+    {
+        return string.toLowerCase();
+    },
+    replace:function(string, search, replace, flags)
+    {
         flags = flags||"gi";
         let re = new RegExp(search, flags);
-		return string.replace(re, replace);
-	},
-	add:function()
-	{
+        return string.replace(re, replace);
+    },
+    add:function()
+    {
         let values = arguments[0];
         let result = 0;
         for(let i in values){
             result += Number(values[i]);
         }
         return result;
-	},
+    },
     include:function(id)
     {
-        let vars = arguments[arguments.length-1];
+        let vars = Object.assign(this._c, arguments[arguments.length-1]);
         let t = new Template(id, vars);
+        t.unescapeVars = false;
         return t.evaluate();
     }
 };
