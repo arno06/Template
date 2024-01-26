@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+    <head lang="en">
+        <meta charset="UTF-8">
+        <title>Template.js - but - With Worker</title>
+        <style>
+            .correct{color:lightgreen;}
+        </style>
+        <script src="../src/TemplateWithWorker.js?worker=../src/Renderer-worker.js"></script>
+        <script>
+            class Test{
+                constructor() {
+
+                }
+
+                getPropString(){
+                    return "From Test.getPropString()";
+                }
+            }
+            let tpl;
+            function init()
+            {
+                var obj = {
+                    "label":"value",
+                    "foo":"bar",
+                    "mmh":"working?",
+                    "number_entry":12,
+                    "string_number_entry":"123",
+                    "propWithVar":"{$someStringbis}",
+                    "boolean":true,
+                    "null_prop":null,
+                    "obj":{"label":"subObjectLabel"}
+                };
+                var emptyArray = [];
+                var table = ["This", "is", "spartaaa", "...", "foo", "bar"];
+                tpl = new Template("id_tpl");
+                tpl.assign("myTable", table);
+                tpl.assign("testName", "Template Advance Testing");
+                tpl.assign("test1", -1);
+                tpl.assign("test2", 6);
+                tpl.assign("boup", "Bouboup");
+                tpl.assign("varWithVar", "{$someString}");
+                tpl.assign("aString", "Bouboup My Friend");
+                tpl.assign("obj", obj);
+                tpl.assign("arrayObj", [obj, obj, obj, obj, obj]);
+                tpl.assign("arrayValues", [1, 12, 24, 36, 48]);
+                tpl.assign("emptyArray", emptyArray);
+                tpl.addEventListener(TemplateEvent.RENDER_INIT, tplRenderInitHandler, false);
+                tpl.addEventListener(TemplateEvent.RENDER_COMPLETE, tplRenderCompleteHandler, false);
+                tpl.addEventListener(TemplateEvent.RENDER_COMPLETE_LOADED, tplRenderCompleteLoadedHandler, false);
+                tpl.render("#holder");
+            }
+            window.addEventListener("load", init, false);
+
+            function tplRenderInitHandler(e)
+            {
+                console.log("Sample.js : init");
+            }
+
+            function tplRenderCompleteHandler(e)
+            {
+                //Ready to display result
+                console.log("Sample.js : complete in "+tpl.time+' ms');
+            }
+
+            function tplRenderCompleteLoadedHandler(e)
+            {
+                //Ready to display & everything is loaded (images)
+                console.log("Sample.js : complete & loaded");
+                tpl.removeEventListener(TemplateEvent.RENDER_INIT, tplRenderInitHandler, false);
+                tpl.removeEventListener(TemplateEvent.RENDER_COMPLETE, tplRenderCompleteHandler, false);
+                tpl.removeEventListener(TemplateEvent.RENDER_COMPLETE_LOADED, tplRenderCompleteLoadedHandler, false);
+            }
+        </script>
+    </head>
+    <body>
+    <h1>Template.js - With worker</h1>
+    <div id="holder"></div>
+    <script type="text/template" id="test_tpl">
+        <div class="correct">
+            <h3>This is an include : $custom_var = {$custom_var}</h3>
+            <h4>$named_var = {$named_var}</h4>
+            <h5>{$boup}</h5>
+        </div>
+    </script>
+    <script type="text/template" id="id_tpl">
+        <h2>Hello {$testName}</h2>
+        <h3>String</h3>
+        <p>&lbrace;$aString&rbrace; : <span class="correct">{$aString}</span></p>
+        <p>&lbrace;$aString.length&rbrace; : <span class="correct">{$aString.length}</span></p>
+        <p>&lbrace;if $aString.indexOf("Bouboup")>-1&rbrace; : {if $aString.indexOf("Bouboup")>-1}<span class="correct">Contains "Bouboup" (tested with a const)</span>{/if}</p>
+        <p>&lbrace;if $aString.indexOf($boup)>-1&rbrace; : {if $aString.indexOf($boup)>-1}<span class="correct">Contains "Bouboup" (but tested with a var) - yep it works</span>{/if}</p>
+        <p>{$varWithVar}</p>
+        <h3>Iterate on Array</h3>
+        <table>
+            <tr>
+                <th>Key</th>
+                <th>Value</th>
+                <th>Even/odd</th>
+                <th>Key+1</th>
+            </tr>
+            {foreach from=$myTable}
+            <tr>
+                <td>{$key}</td>
+                <td>{$item}</td>
+                <td>{if $key%2==0} even {else} odd {/if}</td>
+                <td>{add $key 1}</td>
+            </tr>
+            {/foreach}
+        </table>
+        <h3>Empty Array</h3>
+        <ul>
+            {foreach from=$emptyArray item="value"}
+            <li>{$key} : {$value}</li>
+            {else}
+            <li>Yes, empty array.</li>
+            {/foreach}
+        </ul>
+        <h3>Conditions</h3>
+        <ul>
+            <li>&lbrace;$test1&rbrace; = {$test1}</li>
+            <li>&lbrace;$test2&rbrace; = {$test2}</li>
+            <li>&lbrace;if $test1>=0&rbrace; : {if $test1>=0}Oui{else}<span class="correct">Non</span>{/if}</li>
+            <li>&lbrace;if $test2>=0&rbrace; : {if $test2>=0}<span class="correct">Oui</span>{else}Non{/if}</li>
+            <li>&lbrace;if $test1===-1&&$test2>=0&rbrace; : {if $test1===-1&&$test2>=0}<span class="correct">Oui</span>{else}ko{/if}</li>
+        </ul>
+        <h3>Include function</h3>
+        {include id="test_tpl" custom_var="test" named_var="foo"}
+        <h3>Iterate on Object</h3>
+        <ul>
+            {foreach from=$obj item="value"}
+            <li>{$key} : {$value}</li>
+            {/foreach}
+        </ul>
+        <h3>Objects</h3>
+        <ul>
+
+            {foreach from=$arrayObj item="value"}
+            <li><div>Object index {$key} - Iterate upon props :</div>
+                <ul>
+                    {foreach from=$value key="n"}
+                    <li>{$n} : {$item}</li>
+                    {/foreach}
+                </ul>
+            </li>
+            {/foreach}
+        </ul>
+        <h3>Method from Class Instance</h3>
+        <ul>
+            <li>{$test_ins.getPropString()}</li>
+            <li>$obj.label : {$obj.label}</li>
+            <li>$obj.obj.label : {$obj.obj.label}</li>
+        </ul>
+        <h3>Array indexOf</h3>
+        <ul>
+            <li>{if $arrayValues.indexOf(12)>-1}Yep{else}Nop{/if}</li>
+            <li>{if $arrayValues.indexOf(1)>-1}Yep{else}Nop{/if}</li>
+            <li>{if $arrayValues.indexOf(48)>-1}Yep{else}Nop{/if}</li>
+            <li>{if $arrayValues.indexOf(2)>-1}Nop{else}Yep{/if}</li>
+        </ul>
+    </script>
+    </body>
+</html>
