@@ -1,20 +1,22 @@
-onmessage = (e)=>{
-    switch(e.data.type){
-        case "evaluate":
-            const r = new Renderer(e.data.id, e.data.content, e.data.templates);
-            const html = r.evaluate();
-            postMessage({
-                type:'evaluated',
-                time:r.time,
-                html:html
-            });
-            break;
-    }
-};
+if(constructor.name !== "Window"){
+    onmessage = (e)=>{
+        switch(e.data.type){
+            case "evaluate":
+                const r = new Renderer(e.data.id, e.data.content, e.data.templates);
+                const html = r.evaluate();
+                postMessage({
+                    type:'evaluated',
+                    time:r.time,
+                    html:html
+                });
+                break;
+        }
+    };
 
-onerror = (e)=>{
-    console.error(e);
-};
+    onerror = (e)=>{
+        console.error(e);
+    };
+}
 
 class Renderer
 {
@@ -28,6 +30,11 @@ class Renderer
         this._updateFunctionRE();
         this.time = null;
         this._id = pIdTemplate;
+    }
+
+    setFunction(pName, pFunction){
+        this._functions[pName] = pFunction;
+        this._updateFunctionRE();
     }
 
     _updateFunctionRE(){
